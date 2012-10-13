@@ -1,0 +1,10 @@
+{ "name": "AudioStreamer",
+  "version": "0.0.6",
+  "author": "Mike Vegeto <michael.vegeto@gmail.com>",
+  "description": "Streams audio data as binary data via binaryjs connection",
+  "main": "./AudioStreamer",
+  "engines": { "node": ">=0.8.0" },
+  "keywords": [ "audio", "dsp", "processing", "sound", "streaming", "signal" ],
+  "licenses": [ { "type": "MIT", "url": "http://raw.github.com/ZECTBynmo/AudioStreamer/master/LICENSE" } ],
+  "repository": { "type": "git", "url": "http://github.com/ZECTBynmo/AudioStreamer.git" }
+}
