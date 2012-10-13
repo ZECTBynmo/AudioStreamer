@@ -1,6 +1,9 @@
 { "name": "audio-streamer",
   "version": "0.1.0",
   "author": "Mike Vegeto <michael.vegeto@gmail.com>",
+  "dependencies": {
+    "binaryjs": ">= 0.0.1"
+  },
   "description": "Streams audio data as binary data via binaryjs connection",
   "main": "./audio-streamer",
   "engines": { "node": ">=0.8.0" },
