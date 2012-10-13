@@ -113,7 +113,7 @@ AudioStreamer.prototype.streamAudio = function( processBuffer, numSamples, numCh
 	// buffer we're passed, and queue it up to be sent to the server. We also
 	// copy an incoming buffer (from the server) into the process buffer, if any
 	// exist
-	/*
+	
 	// Queue up this buffer to be sent out to the server
 	this.outgoingBuffers.push( processBuffer );
 	
@@ -131,5 +131,4 @@ AudioStreamer.prototype.streamAudio = function( processBuffer, numSamples, numCh
 		// Clear the buffer queue
 		this.incomingBuffers.length = 0;
 	}
-	*/
 } // end AudioStreamer.streamAudio()
