@@ -45,6 +45,8 @@ var dflt = function(a, b) { 													// Default a to b if a is undefined
 //////////////////////////////////////////////////////////////////////////
 // Constructor
 function AudioStreamer( port ) {	
+	var self = this;
+	
 	this.server;			// Our server instance (only exists if we're the server)
 	this.clients = [];		// Our list of clients (this.clients[0] is us when we're not the server)
 	this.isServer = true;	// Set when we're a server, owning the port
@@ -56,31 +58,37 @@ function AudioStreamer( port ) {
 
 	// We're going to try to create a server to stream audio. If another
 	// AudioStreamer instance is already sitting on our port, we need to
-	// connect to it. To do this, we surround our connection with try catch,
-	// and then try to create a server. If that fails, we fall back on acting
-	// as a client
-	try {
-		this.server = BinaryServer( {port: port} );
-		
-		this.server.on( 'connection', function(client) {
-			log( "Recieved connection from client" );		
-			
-			this.clients.push( client );
-			
-			client.on( 'stream', function(stream, meta) {
-				stream.on( 'data', function(data) {
-					this.incomingBuffers.push( data.buffer )
-				});
-			});
-		};
-	} catch( error ) {	
+	// connect to it. To do this, we try to create a server. If that fails, 
+	// we fall back on acting as a client
+	log( "Attempting to create server" );
+	
+	process.on('EADDRINUSE', function (err) {
+		console.error(err);
+	});		
+	
+	console.log( port );
+	this.server = BinaryServer( {port: this.port} );
+	
+	this.server.on( "error", function( error ) {
 		log( "Failed to start server " + error );		
-		this.clients.push( new BinaryClient('ws://localhost:' + port) );		
-		this.isServer = false;
-	}
+		log( "Acting as a client" );		
+		self.clients.push( new BinaryClient('ws://localhost:' + port) );		
+		self.isServer = false;
+	});		
+	
+	this.server.on( 'connection', function(client) {
+		log( "Recieved connection from client" );		
+		
+		self.clients.push( client );
+		
+		client.on( 'stream', function(stream, meta) {
+			stream.on( 'data', function(data) {
+				self.incomingBuffers.push( data.buffer )
+			});
+		});
+	});
 	
 	// We're going to check for new outgoing buffers as often as possible
-	var self = this;
 	setInterval( function() {	
 		if( self.outgoingBuffers.length > 0 ) {
 			for( var iBuffer=0; iBuffer<self.outgoingBuffers.length; ++iBuffer ) {
@@ -89,6 +97,9 @@ function AudioStreamer( port ) {
 					self.clients[iClient].send( {buffer: self.outgoingBuffers[iBuffer]} );
 				} // end for each client
 			} // end for each buffer
+		
+			// Clear the buffer queue
+			self.outgoingBuffers.length = 0;
 		}
 	}, 0 );
 } // end AudioStreamer()
@@ -102,19 +113,23 @@ AudioStreamer.prototype.streamAudio = function( processBuffer, numSamples, numCh
 	// buffer we're passed, and queue it up to be sent to the server. We also
 	// copy an incoming buffer (from the server) into the process buffer, if any
 	// exist
-	
+	/*
 	// Queue up this buffer to be sent out to the server
 	this.outgoingBuffers.push( processBuffer );
 	
 	// If we have buffers coming in from the server, we need to add them into the
 	// process buffer
-	if( incomingBuffers.length > 0 ) {
-		for( var iBuffer=0; iBuffer<self.outgoingBuffers.length; ++iBuffer ) {
+	if( this.incomingBuffers.length > 0 ) {
+		for( var iBuffer=0; iBuffer<this.incomingBuffers.length; ++iBuffer ) {
 			for( var iChannel=0; iChannel<numChannels; ++iChannel ) {
 				for( var iSample=0; iSample<numSamples; ++iSample ) {
-					processBuffer[iChannel][iSample] = (processBuffer[iChannel][iSample] + self.outgoingBuffers[iBuffer][iChannel][iSample]) * 0.5;
+					processBuffer[iChannel][iSample] = (processBuffer[iChannel][iSample] + this.incomingBuffers[iBuffer][iChannel][iSample]) * 0.5;
 				} // end for each sample
 			} // end for each channel
 		} // end for each buffer
+		
+		// Clear the buffer queue
+		this.incomingBuffers.length = 0;
 	}
+	*/
 } // end AudioStreamer.streamAudio()
